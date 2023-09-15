@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+    <head>
+    <title>Vuejs wrok </title>
+        <style>
+        .box {
+            background-color: blueviolet;
+            height: 200px;
+            width : 200px;
+
+            }
+        .box.two{
+            background-color: aquamarine;
+        }
+        .box.three{
+            background-color: beige;
+        }
+        [v-cloak]{
+            display: none;
+        }
+        </style>
+    </head>
+    <body>
+        <div id = "app" v-cloak>
+           {{greeting}}
+           <input @keyup.enter="greet" v-model = "greeting"/>
+           <hr/>
+        
+        <button @click="toggleBox">Toggle Box</button>
+        <div v-if="isVisible" class="box"></div>
+
+        </div>
+        <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+        <script>
+            let app = Vue.createApp({
+                data : function(){
+                return {
+
+                    greeting: "Hello Vue 3 !!",
+                    isVisible: true,
+                    
+
+                }
+            },
+            methods:{
+                toggleBox(){
+                    this.isVisible = !this.isVisible
+                },
+
+                greet(){
+                    console.log(this.greeting)
+                }
+
+            }
+            }
+            
+            )
+            app.mount('#app')
+        </script>
+    </body>
+</html>
