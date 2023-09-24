@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-
+from server.router import user
 
 app = FastAPI(title="QuantumLeap Backend Test")
 
@@ -11,7 +11,7 @@ app.add_middleware(
     allow_headers=["*"],
     allow_credentials=True,
 )
-
+app.include_router(user.router) 
 
 
 @app.get("/ping")
