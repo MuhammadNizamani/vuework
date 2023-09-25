@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from server.router import user
 
-app = FastAPI(title="QuantumLeap Backend Test")
+app = FastAPI(title="TS Chess Club testing")
 
 app.add_middleware(
     CORSMiddleware,
