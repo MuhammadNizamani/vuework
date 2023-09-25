@@ -13,11 +13,12 @@ Base.metadata.create_all(engine)
 session = db  
 # Example of adding a user to the database
 
-new_user = Users(
-    name="Ishaque",
-    email ="ishaqueNizamai@gmail.com",
-    password="Nizamani123",
+# new_user = Users(
+#     id = Column(Integer, primary_key=True, index=True)
+#     name="Ishaque",
+#     email ="ishaqueNizamai@gmail.com",
+#     password="Nizamani123",
     
-)
-session.add(new_user)
-session.commit()
+# )
+# session.add(new_user)
+# session.commit()
