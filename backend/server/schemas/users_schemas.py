@@ -8,12 +8,24 @@ class UserType:
     user_id: int
     name: str
     email: str
+    chess_username: str
+    
+    
+
 
 @strawberry.input
 class UserInput:
     name: str
     email: str
     password: str
+    chess_username: str
+    def to_dict(self):
+        return {
+            "name": self.name,
+            "chess_username": self.chess_username,
+            "email": self.email,
+            "password": self.password,
+        }
 
 @strawberry.type
 class LoginSuccess:
