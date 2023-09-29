@@ -31,7 +31,7 @@ class Query:
 @strawberry.type
 class Mutation:
     @strawberry.mutation
-    def create_user(self, info,user_input: UserInput) -> UserType:
+    def create_user(self, info,user_input: UserInput) -> SignUpResult:
         
         # hashing the passward 
         hashed_password = helper.hash(user_input.password)
@@ -40,7 +40,8 @@ class Mutation:
         # Getting data from chess.com 
         data = chessdotcomapi.get_data_from_chessdotcom(player=user_input.chess_username)
         if '404' in data:
-            return "You chess.com username does not exit"
+            return SignUpResult(success=False,user=None, message="You chess.com username does not exit") 
+            
         
         # Checking that avatar (profile pic  ) of user is upload or not 
         # Checking this important becasue if there is not avatar then chess.com won't retrun avater field in the data
@@ -70,7 +71,11 @@ class Mutation:
         session.add(new_user)
         session.commit()
         session.refresh(new_user)
-        return UserType(user_id=new_user.user_id, name=new_user.name, email = new_user.email, chess_username=new_user.chess_username)
+        return SignUpResult(success=True,user=UserType(user_id=new_user.user_id, 
+                                                        name=new_user.name, 
+                                                        email = new_user.email, 
+                                                        chess_username=new_user.chess_username),
+                            message="User created successfully")
 
     # UserType(**user_input.to_dict())
     # UserType(user_id=new_user.user_id, name=new_user.name, email = new_user.email, chess_username=new_user.chess_username)
