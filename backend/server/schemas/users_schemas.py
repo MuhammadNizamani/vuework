@@ -10,7 +10,15 @@ class UserType:
     email: str
     chess_username: str
     
-    
+   
+# @strawberry.type
+# class SignupError:
+#     message: str 
+
+class SignUpResult:
+    success: bool
+    user: Union[UserType, None]
+    message: str
 
 
 @strawberry.input
@@ -37,6 +45,10 @@ class LoginError:
     message: str
 
 
-LoginResult = Annotated[
-    Union[LoginSuccess, LoginError], strawberry.union("LoginResult")
-]
+# LoginResult = Annotated[
+#     Union[LoginSuccess, LoginError], strawberry.union("LoginResult")
+# ]
+
+# SignUpResult = Annotated[
+#     Union[UserType, SignupError], strawberry.union("SignUpResult")
+# ]
