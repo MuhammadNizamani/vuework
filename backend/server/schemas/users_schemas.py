@@ -14,7 +14,7 @@ class UserType:
 # @strawberry.type
 # class SignupError:
 #     message: str 
-
+@strawberry.type
 class SignUpResult:
     success: bool
     user: Union[UserType, None]
