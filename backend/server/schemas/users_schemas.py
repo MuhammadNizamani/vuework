@@ -83,4 +83,44 @@ class RatingType:
     rapid_rating: Union[int, None]
     blitz: Union[int, None]
     bullet_rating: Union[int, None]
+  
+  
+# following class are schemas for updating user  
+@strawberry.type
+class UserUpdateType:
+    user_id: int
+    name: str
+    email: str
+    avater: str
+    last_online : datetime
+    url:str
+    league : str
+    country: str
+    followers: int
+    player_id:str
+    status : str
+    is_streamer: bool
+    verified:bool   
+    
+@strawberry.type
+class UserUpdateResult:
+    success: bool
+    update: Union[UserUpdateType, None]
+    message: str
+    
+@strawberry.input
+class UserUpdateInput:
+    user_id: int
+    name: str
+    email: str
+    avater: str
+    last_online : datetime
+    league : str
+    url:str
+    country: str
+    followers: int
+    player_id:str
+    status : str
+    is_streamer: bool
+    verified:bool 
     

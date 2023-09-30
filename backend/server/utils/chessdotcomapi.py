@@ -27,7 +27,7 @@ def get_data_from_chessdotcom(player:str):
             # print(f"Rapid Rating for {player}: {rapid_rating}")
             # # print(f"Bullet Rating for {player}: {bullet_rating}")
             # print(f"Blitz Rating for {player}: {blitz_rating}")
-            print(data)
+            # print(data)
             
             # else :
             #     print(data["username"])
