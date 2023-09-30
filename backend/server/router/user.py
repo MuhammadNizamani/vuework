@@ -1,8 +1,8 @@
 import strawberry
-from server.models.models import Users, session
+from server.models.models import Users, session, Rating
 from fastapi.routing import APIRouter, Response
 from fastapi import HTTPException, status
-from server.schemas.users_schemas import UserInput, UserType, SignUpResult
+from server.schemas import users_schemas
 import typing
 from server.utils import helper, exception, chessdotcomapi
 import datetime
@@ -21,17 +21,41 @@ def get_user(user_id: int):
 @strawberry.type
 class Query:
     @strawberry.field
-    def user(self, user_id: int) -> UserType or str:
+    def user(self, user_id: int) -> users_schemas.UserType or str:
         query = session.query(Users).filter(Users.user_id == user_id).first()
         return query
 
     @strawberry.field
-    def users(self) -> typing.List[UserType]:
+    def users(self) -> typing.List[users_schemas.UserType]:
         return session.query(Users).all()
+    @strawberry.field
+    def login_user(self ,email:str, password: str) -> users_schemas.LoginResult:
+        
+        user = session.query(Users).filter(Users.email == email).first()
+        if user is None:
+            return users_schemas.LoginResult(success=False, login=None, message= "Invalid Credentials")  
+        # print(str(user.password))
+        if not helper.verify(str(password), str(user.password)):
+            return users_schemas.LoginResult(success=False, login=None, message= "Invalid Credentials") 
+        
+        return  users_schemas.LoginResult(success=False, login=users_schemas.LoginType(user_id=user.user_id,
+                                                           name =user.name,
+                                                           email=user.email,
+                                                           chess_username=user.chess_username,
+                                                           avater=user.avatar,
+                                                           last_online= user.last_online,
+                                                           league= user.league,
+                                                           country= user.country,
+                                                           followers = user.followers,
+                                                           player_id= user.player_id,
+                                                           status= user.status,
+                                                           is_streamer= user.is_streamer,
+                                                           verified= user.verified)
+                            , message= "Login successfully! Welcome ")
 @strawberry.type
 class Mutation:
     @strawberry.mutation
-    def create_user(self, info,user_input: UserInput) -> SignUpResult:
+    def create_user(self, info,user_input: users_schemas.UserInput) -> users_schemas.SignUpResult:
         
         # hashing the passward 
         hashed_password = helper.hash(user_input.password)
@@ -40,63 +64,79 @@ class Mutation:
         # Getting data from chess.com 
         data = chessdotcomapi.get_data_from_chessdotcom(player=user_input.chess_username)
         if '404' in data:
-            return SignUpResult(success=False,user=None, message="You chess.com username does not exit") 
+            return users_schemas.SignUpResult(success=False,user=None, message="You chess.com username does not exit") 
             
         
         # Checking that avatar (profile pic  ) of user is upload or not 
         # Checking this important becasue if there is not avatar then chess.com won't retrun avater field in the data
         if 'avatar' in data:
-            new_user = Users(name = user_input.name, 
-                            chess_username= user_input.chess_username, email=user_input.email,
-                            password = user_input.password, avatar= data['avatar'], 
-                            player_id = data['player_id'], url = data['url'], followers = data['followers'],
-                            country= data['country'], 
-                            last_online =datetime.datetime.fromtimestamp(data['last_online']),
-                            joined=datetime.datetime.fromtimestamp(data['joined']) ,
-                            status = data['status'], is_streamer= data['is_streamer'], verified= data['verified'],
-                            league= data['league'] )
+            avatar= data['avatar'], 
+                            
         else:
-            new_user = Users(name = user_input.name, 
+           
+            avatar= "https://www.chess.com/bundles/web/images/user-image.007dad08.svg", 
+                           
+                            
+        # new_user = Users(**user_input.to_dict())
+        new_user = Users(name = user_input.name, 
                             chess_username= user_input.chess_username, email=user_input.email,
-                            password = user_input.password, 
-                            avatar= "https://www.chess.com/bundles/web/images/user-image.007dad08.svg", 
+                            password = user_input.password, avatar= avatar, 
                             player_id = data['player_id'], url = data['url'], followers = data['followers'],
                             country= data['country'], 
                             last_online =datetime.datetime.fromtimestamp(data['last_online']),
                             joined=datetime.datetime.fromtimestamp(data['joined']) ,
                             status = data['status'], is_streamer= data['is_streamer'], verified= data['verified'],
                             league= data['league'] )
-            
-        # new_user = Users(**user_input.to_dict())
         session.add(new_user)
         session.commit()
         session.refresh(new_user)
-        return SignUpResult(success=True,user=UserType(user_id=new_user.user_id, 
+        return users_schemas.SignUpResult(success=True,user=users_schemas.UserType(user_id=new_user.user_id, 
                                                         name=new_user.name, 
                                                         email = new_user.email, 
                                                         chess_username=new_user.chess_username),
                             message="User created successfully")
 
-    # UserType(**user_input.to_dict())
-    # UserType(user_id=new_user.user_id, name=new_user.name, email = new_user.email, chess_username=new_user.chess_username)
-    # UserType(name = new_user.name, email = new_user.email,chess_username= new_user.chess_username)
-
+    
     @strawberry.mutation
-    def update_user(self, info, id: int, name: str, email: str, chess_username:str, password: str) ->  str:
-        user_query = session.query(Users).filter(Users.user_id == id)
+    def update_user(self, info, user_update:users_schemas.UserUpdateInput) -> users_schemas.UserUpdateResult:
+        user_query = session.query(Users).filter(Users.user_id == user_update.user_id)
         user = user_query.first()
         if user is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail=f"User with id: {id} does not exist",
-            )
+            return users_schemas.UserUpdateResult(success=False, 
+                                           update=None, 
+                                           message= f"User with {user_update.user_id} does not exist ")
 
-        user.name = name
-        user.email = email
-        user.chess_username = chess_username
-        user.password = password
+        user.name = user_update.name
+        user.email = user_update.email
+        user.avatar = user_update.avater
+        user.player_id = user_update.player_id
+        user.last_online = user_update.last_online
+        user.league = user_update.league
+        user.url = user_update.url
+        user.country = user_update.country
+        user.followers = user_update.followers
+        user.status = user_update.status
+        user.is_streamer = user_update.is_streamer
+        user.verified = user_update.verified
+        
+        
+        
         session.commit()
-        return user
+        return users_schemas.UserUpdateResult(success=True, 
+                                           update=users_schemas.UserUpdateType(user_id=user_update.user_id,
+                                                                               name = user.name,
+                                                                               email=user.email,
+                                                                               avater=user.avatar,
+                                                                               player_id=user.player_id,
+                                                                               last_online=user.last_online,
+                                                                               league=user.league,
+                                                                               url=user.url,
+                                                                               country=user.country,
+                                                                               followers=user.followers,
+                                                                               status=user.status,
+                                                                               is_streamer=user.is_streamer,
+                                                                               verified=user.verified), 
+                                           message= f"Updated successfully  ")
 
     @strawberry.mutation
     def delete_user(self, info, id: int) -> str:
@@ -112,18 +152,45 @@ class Mutation:
         except exception.UserDoesNotExist:
             return f"User with id: {id} does not exist"
     
-    # Working on login work
+    # Working on rating system 
     @strawberry.mutation
-    def login_user(self ,email:str, password: str) -> str: # LoginResult:
-        print("I am in login user function")
-        user = session.query(Users).filter(Users.email == email).first()
-        if user is None:
-            return "Invalid Credentials"
-        print(str(user.password))
-        if not helper.verify(str(password), str(user.password)):
-            return "Invalid Credentials"
+    def add_rating(self, info, user_id:int) -> users_schemas.RatingType:
+        user_query = session.query(Users).filter(Users.user_id == user_id).first()
+        data = chessdotcomapi.get_rating_data_from_chessdotcom(player=user_query.chess_username)
+        if 'chess_blitz' in data:
+            chess_blitz = int(data['chess_blitz']['last']['rating'])
+        else:
+            chess_blitz = None
+        if 'chess_bullet' in data:
+            chess_bullet = int(data['chess_bullet']['last']['rating'])
+        else:
+            chess_bullet = None
+        if 'chess_daily' in data:
+            chess_daily = int(data['chess_daily']['last']['rating'])
+        else:
+            chess_daily = None
+        if 'chess_rapid' in data:
+            chess_rapid = int(data['chess_rapid']['last']['rating'])
+        else:
+            chess_rapid= None
+            
+        rating = Rating(user_id = user_id, 
+        daily_rating=chess_daily,
+        rapid_rating = chess_rapid,
+        blitz = chess_blitz, 
+        bullet_rating= chess_bullet)
+        session.add(rating)
+        session.commit()
+        session.refresh(rating)
+        return users_schemas.RatingType(user_id=user_id, 
+                          daily_rating=chess_daily, 
+                          rapid_rating=chess_rapid, 
+                          blitz=chess_blitz, 
+                          bullet_rating=chess_bullet)
+         
         
-        return  "welcome"
+    
+    
         
             
 
@@ -132,7 +199,4 @@ schema = strawberry.Schema(query=Query, mutation=Mutation)
 
 graphql_app = GraphQL(schema=schema)
 # Add Strawberry GraphQL app to FastAPI
-# @router.post("/graphql")
-# async def graphql(request: strawberry.asgi.Request):
-#     return await strawberry.asgi.graphql(request, schema)
 router.add_route('/graphql',graphql_app )
