@@ -1,8 +1,8 @@
 import strawberry
-from server.models.models import Users, session
+from server.models.models import Users, session, Rating
 from fastapi.routing import APIRouter, Response
 from fastapi import HTTPException, status
-from server.schemas.users_schemas import UserInput, UserType, SignUpResult
+from server.schemas.users_schemas import UserInput, UserType, SignUpResult, LoginResult, LoginType, RatingType
 import typing
 from server.utils import helper, exception, chessdotcomapi
 import datetime
@@ -28,6 +28,30 @@ class Query:
     @strawberry.field
     def users(self) -> typing.List[UserType]:
         return session.query(Users).all()
+    @strawberry.field
+    def login_user(self ,email:str, password: str) -> LoginResult:
+        
+        user = session.query(Users).filter(Users.email == email).first()
+        if user is None:
+            return LoginResult(success=False, login=None, message= "Invalid Credentials")  
+        # print(str(user.password))
+        if not helper.verify(str(password), str(user.password)):
+            return LoginResult(success=False, login=None, message= "Invalid Credentials") 
+        
+        return  LoginResult(success=False, login=LoginType(user_id=user.user_id,
+                                                           name =user.name,
+                                                           email=user.email,
+                                                           chess_username=user.chess_username,
+                                                           avater=user.avatar,
+                                                           last_online= user.last_online,
+                                                           league= user.league,
+                                                           country= user.country,
+                                                           followers = user.followers,
+                                                           player_id= user.player_id,
+                                                           status= user.status,
+                                                           is_streamer= user.is_streamer,
+                                                           verified= user.verified)
+                            , message= "Login successfully! Welcome ")
 @strawberry.type
 class Mutation:
     @strawberry.mutation
@@ -112,18 +136,45 @@ class Mutation:
         except exception.UserDoesNotExist:
             return f"User with id: {id} does not exist"
     
-    # Working on login work
+    # Working on rating system 
     @strawberry.mutation
-    def login_user(self ,email:str, password: str) -> str: # LoginResult:
-        print("I am in login user function")
-        user = session.query(Users).filter(Users.email == email).first()
-        if user is None:
-            return "Invalid Credentials"
-        print(str(user.password))
-        if not helper.verify(str(password), str(user.password)):
-            return "Invalid Credentials"
+    def add_rating(self, info, user_id:int) -> RatingType:
+        user_query = session.query(Users).filter(Users.user_id == user_id).first()
+        data = chessdotcomapi.get_rating_data_from_chessdotcom(player=user_query.chess_username)
+        if 'chess_blitz' in data:
+            chess_blitz = int(data['chess_blitz']['last']['rating'])
+        else:
+            chess_blitz = None
+        if 'chess_bullet' in data:
+            chess_bullet = int(data['chess_bullet']['last']['rating'])
+        else:
+            chess_bullet = None
+        if 'chess_daily' in data:
+            chess_daily = int(data['chess_daily']['last']['rating'])
+        else:
+            chess_daily = None
+        if 'chess_rapid' in data:
+            chess_rapid = int(data['chess_rapid']['last']['rating'])
+        else:
+            chess_rapid= None
+            
+        rating = Rating(user_id = user_id, 
+        daily_rating=chess_daily,
+        rapid_rating = chess_rapid,
+        blitz = chess_blitz, 
+        bullet_rating= chess_bullet)
+        session.add(rating)
+        session.commit()
+        session.refresh(rating)
+        return RatingType(user_id=user_id, 
+                          daily_rating=chess_daily, 
+                          rapid_rating=chess_rapid, 
+                          blitz=chess_blitz, 
+                          bullet_rating=chess_bullet)
+         
         
-        return  "welcome"
+    
+    
         
             
 

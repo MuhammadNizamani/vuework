@@ -1,6 +1,6 @@
 import strawberry
 from typing import Annotated, Union
-
+from datetime import datetime
 
 # Define GraphQL types
 @strawberry.type
@@ -35,14 +35,14 @@ class UserInput:
             "password": self.password,
         }
 
-@strawberry.type
-class LoginSuccess:
-    user: UserType
+# @strawberry.type
+# class LoginSuccess:
+#     user: UserType
 
 
-@strawberry.type
-class LoginError:
-    message: str
+# @strawberry.type
+# class LoginError:
+#     message: str
 
 
 # LoginResult = Annotated[
@@ -52,3 +52,35 @@ class LoginError:
 # SignUpResult = Annotated[
 #     Union[UserType, SignupError], strawberry.union("SignUpResult")
 # ]
+
+@strawberry.type
+class LoginType:
+    user_id: int
+    name: str
+    email: str
+    chess_username: str
+    avater: str
+    last_online : datetime
+    league : str
+    country: str
+    followers: int
+    player_id:str
+    status : str
+    is_streamer: bool
+    verified:bool   
+
+
+@strawberry.type
+class LoginResult:
+    success: bool
+    login: Union[LoginType, None]
+    message: str
+    
+@strawberry.type
+class RatingType:
+    user_id: int
+    daily_rating: Union[int, None]
+    rapid_rating: Union[int, None]
+    blitz: Union[int, None]
+    bullet_rating: Union[int, None]
+    
