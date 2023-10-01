@@ -6,7 +6,7 @@ from server.schemas import users_schemas
 import typing
 from server.utils import helper, exception, chessdotcomapi
 import datetime
-
+from typing import Dict
 
 # import strawberry.asgi 
 from strawberry.asgi import GraphQL
@@ -28,6 +28,19 @@ class Query:
     @strawberry.field
     def users(self) -> typing.List[users_schemas.UserType]:
         return session.query(Users).all()
+    # following method is for testing perpose 
+    @strawberry.field
+    def check_login_user(self ,email:str, password: str) -> str:
+        
+        user = session.query(Users).filter(Users.email == email).first()
+        if user is None:
+            return  "message: Invalid Credentials"
+        # print(str(user.password))
+        if not helper.verify(str(password), str(user.password)):
+            return   "message: Invalid Credentials"
+        
+        return "token: your token"
+    
     @strawberry.field
     def login_user(self ,email:str, password: str) -> users_schemas.LoginResult:
         
