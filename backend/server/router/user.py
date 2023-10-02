@@ -3,8 +3,9 @@ from server.models.models import Users, session, Rating
 from fastapi.routing import APIRouter, Response
 from fastapi import HTTPException, status
 from server.schemas import users_schemas
+from fastapi.security.oauth2 import OAuth2PasswordRequestForm
 import typing
-from server.utils import helper, exception, chessdotcomapi
+from server.utils import helper, exception, chessdotcomapi, oauth
 import datetime
 from typing import Dict
 
@@ -38,8 +39,8 @@ class Query:
         # print(str(user.password))
         if not helper.verify(str(password), str(user.password)):
             return   "message: Invalid Credentials"
-        
-        return "token: your token"
+        access_token =oauth.create_token(data ={"user_id":user.user_id })
+        return f"token: {str(access_token)} , token_type: bearer"
     
     @strawberry.field
     def login_user(self ,email:str, password: str) -> users_schemas.LoginResult:

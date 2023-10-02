@@ -124,3 +124,7 @@ class UserUpdateInput:
     is_streamer: bool
     verified:bool 
     
+@strawberry.input
+class UserCredentials:
+    username: str
+    password: str

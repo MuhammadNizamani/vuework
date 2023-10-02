@@ -41,7 +41,7 @@ def get_data_from_chessdotcom(player:str):
             # print(len(data))
             return data
         else:
-            print(f"Error fetching data. Status code: {response.status}")
+            # print(f"Error fetching data. Status code: {response.status}")
             data = {'404':response.status }
             return data
 
