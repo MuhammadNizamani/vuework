@@ -8,6 +8,7 @@ import typing
 from server.utils import helper, exception, chessdotcomapi, oauth
 import datetime
 from typing import Dict
+from server.db import user_helper
 
 # import strawberry.asgi 
 from strawberry.asgi import GraphQL
@@ -104,6 +105,9 @@ class Mutation:
         session.add(new_user)
         session.commit()
         session.refresh(new_user)
+        rating = user_helper.add_rating(new_user.user_id)
+        print(rating)
+        
         return users_schemas.SignUpResult(success=True,user=users_schemas.UserType(user_id=new_user.user_id, 
                                                         name=new_user.name, 
                                                         email = new_user.email, 
