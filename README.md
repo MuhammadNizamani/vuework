@@ -4,3 +4,4 @@ I am learning vuejs and I will create an webapp for chess club and I will create
 and the backend uses graphQL
 
 I am working on JWT on thr backend
+GraphQL need to refactor 
