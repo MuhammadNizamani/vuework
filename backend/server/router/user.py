@@ -1,14 +1,14 @@
 import strawberry
 from server.models.models import Users, session, Rating
-from fastapi.routing import APIRouter, Response
-from fastapi import HTTPException, status
+from fastapi.routing import APIRouter
+from fastapi import Depends
 from server.schemas import users_schemas
-from fastapi.security.oauth2 import OAuth2PasswordRequestForm
 import typing
 from server.utils import helper, exception, chessdotcomapi, oauth
 import datetime
 from typing import Dict
 from server.db import user_helper
+from server.utils import oauth
 
 # import strawberry.asgi 
 from strawberry.asgi import GraphQL
@@ -117,6 +117,8 @@ class Mutation:
     
     @strawberry.mutation
     def update_user(self, info, user_update:users_schemas.UserUpdateInput) -> users_schemas.UserUpdateResult:
+        current_user: int = Depends(oauth.get_current_user)
+        print("error:", type(current_user), current_user.id)
         user_query = session.query(Users).filter(Users.user_id == user_update.user_id)
         user = user_query.first()
         if user is None:
