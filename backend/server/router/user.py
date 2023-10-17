@@ -118,6 +118,7 @@ class Mutation:
     @strawberry.mutation
     def update_user(self, info, user_update:users_schemas.UserUpdateInput) -> users_schemas.UserUpdateResult:
         current_user: int = Depends(oauth.get_current_user)
+        # current_user: int = Depends(oauth.get_current_user)
         print("error:", type(current_user), current_user.id)
         user_query = session.query(Users).filter(Users.user_id == user_update.user_id)
         user = user_query.first()
